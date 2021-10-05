@@ -114,24 +114,24 @@ bool Rectangle::GetSegmentIntersectionIndices(math::vec2 top, math::vec2 bottom,
     // return {ti1, ti2, normalA, normalB}
 }
 
-bool Rectangle::DetectCollision(const Rectangle& other,Collision& collision, math::vec2 goal) const
+bool Rectangle::DetectCollision(const Rectangle& other,Collision* collision, math::vec2 goal) const
 {
-    collision.move = goal - pos;
+    collision->move = goal - pos;
     auto difference = GetDifference(other);
 
     if (difference.ContainsPoint(ZERO))
     {
         auto diffCorner = difference.GetNearestCorner(ZERO);
         auto intersectionArea = math::vec2(std::min(scale.x, std::abs(diffCorner.x)), std::min(scale.y, std::abs(diffCorner.y)));
-        collision.ti = -intersectionArea.x * intersectionArea.y;  // ti is the negative area of intersection
-        collision.overlaps = true;
+        collision->ti = -intersectionArea.x * intersectionArea.y;  // ti is the negative area of intersection
+        collision->overlaps = true;
     }
     else
     {
         IntersectionIndicie indicie;
         indicie.ti1 = -std::numeric_limits<float>::max();
         indicie.ti2 = std::numeric_limits<float>::max();
-        auto valid = difference.GetSegmentIntersectionIndices(ZERO,collision.move, indicie);
+        auto valid = difference.GetSegmentIntersectionIndices(ZERO,collision->move, indicie);
 
         if (
             valid and indicie.ti1 < 1.0f and
@@ -139,9 +139,9 @@ bool Rectangle::DetectCollision(const Rectangle& other,Collision& collision, mat
             ( (0.0f < indicie.ti1 + DELTA) or (0.0f == indicie.ti1 and indicie.ti2 > 0.0f) )
         )
         {
-            collision.ti = indicie.ti1;
-            collision.normal = indicie.normalA;
-            collision.overlaps = false;
+            collision->ti = indicie.ti1;
+            collision->normal = indicie.normalA;
+            collision->overlaps = false;
         }
         else
         {
@@ -151,40 +151,40 @@ bool Rectangle::DetectCollision(const Rectangle& other,Collision& collision, mat
 
     math::vec2 t;
 
-    if (collision.overlaps)
+    if (collision->overlaps)
     {
 
-        if (collision.move.x == 0.0f and collision.move.y == 0.0f)
+        if (collision->move.x == 0.0f and collision->move.y == 0.0f)
         {
             auto diffCorner = difference.GetNearestCorner(ZERO);
             if (std::abs(diffCorner.x) < std::abs(diffCorner.y)){diffCorner.y = 0.0f;}else{diffCorner.x = 0.0f;}
-            collision.normal = sign(diffCorner);
-            collision.touch = pos + diffCorner;
+            collision->normal = sign(diffCorner);
+            collision->touch = pos + diffCorner;
         }
         else
         {
             IntersectionIndicie indicie;
             indicie.ti1 = -std::numeric_limits<float>::max();
             indicie.ti2 = 1;
-            auto valid = difference.GetSegmentIntersectionIndices(ZERO,collision.move, indicie);
+            auto valid = difference.GetSegmentIntersectionIndices(ZERO,collision->move, indicie);
             if (not valid)
             {
                 return false;
             }
             else
             {
-                collision.touch.x = pos.x + collision.move.x * indicie.ti1;
-                collision.touch.y = pos.y + collision.move.y * indicie.ti1;
-                collision.normal = indicie.normalA;
+                collision->touch.x = pos.x + collision->move.x * indicie.ti1;
+                collision->touch.y = pos.y + collision->move.y * indicie.ti1;
+                collision->normal = indicie.normalA;
             }
         }
     }
     else
     {
-        collision.touch = pos + collision.move*collision.ti;
+        collision->touch = pos + collision->move*collision->ti;
     }
 
-    collision.itemRect = *this;
-    collision.otherRect = Rectangle(other);
+    collision->itemRect = *this;
+    collision->otherRect = Rectangle(other);
     return true;
 }

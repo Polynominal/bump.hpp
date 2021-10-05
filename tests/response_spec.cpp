@@ -25,8 +25,8 @@ TEST_F(BumpWorldTest, BasicTouch)
     col.other = b;
     col.Respond<response::Touch>();
 
-    ASSERT_TRUE(resolution.collisions[0].Is<response::Touch>());
-    ASSERT_EQ(resolution.collisions[0].other, b);
+    ASSERT_TRUE(resolution.collisions[0]->Is<response::Touch>());
+    ASSERT_EQ(resolution.collisions[0]->other, b);
 }
 
 
@@ -45,11 +45,11 @@ TEST_F(BumpWorldTest, BasicCross)
     CompareRectangle(Rectangle(0,5,1,1), a->GetRectangle());
     ASSERT_EQ(resolution.collisions.size(), 2);
 
-    ASSERT_TRUE(resolution.collisions[0].Is<response::Cross>());
-    ASSERT_EQ(resolution.collisions[0].other, b);
+    ASSERT_TRUE(resolution.collisions[0]->Is<response::Cross>());
+    ASSERT_EQ(resolution.collisions[0]->other, b);
 
-    ASSERT_TRUE(resolution.collisions[1].Is<response::Cross>());
-    ASSERT_EQ(resolution.collisions[1].other, c);
+    ASSERT_TRUE(resolution.collisions[1]->Is<response::Cross>());
+    ASSERT_EQ(resolution.collisions[1]->other, c);
 }
 
 TEST_F(BumpWorldTest, BasicSliding)
@@ -68,8 +68,8 @@ TEST_F(BumpWorldTest, BasicSliding)
     CompareRectangle(Rectangle(1,5,1,1), a->GetRectangle());
     ASSERT_EQ(resolution.collisions.size(), 1);
 
-    ASSERT_TRUE(resolution.collisions[0].Is<response::Slide>());
-    ASSERT_EQ(resolution.collisions[0].other, c);
+    ASSERT_TRUE(resolution.collisions[0]->Is<response::Slide>());
+    ASSERT_EQ(resolution.collisions[0]->other, c);
 }
 
 TEST_F(BumpWorldTest, BasicBounce)
@@ -86,8 +86,8 @@ TEST_F(BumpWorldTest, BasicBounce)
     CompareVec2(resolution.pos, math::vec2(0,-3));
     ASSERT_EQ(resolution.collisions.size(), 1);
     CompareRectangle(Rectangle(0,-3,1,1), a->GetRectangle());
-    ASSERT_TRUE(resolution.collisions[0].Is<response::Bounce>());
-    ASSERT_EQ(resolution.collisions[0].other, b);
+    ASSERT_TRUE(resolution.collisions[0]->Is<response::Bounce>());
+    ASSERT_EQ(resolution.collisions[0]->other, b);
 }
 
 
@@ -105,7 +105,7 @@ std::vector<math::vec2> touch(float x, float y, float w, float h,  float ox, flo
     auto touch = response::Touch();
     touch.SetWorld(&sampleWorld);
     Collision col;
-    Rectangle(x,y,w,h).DetectCollision(Rectangle(ox,oy,ow,oh), col, math::vec2(goalX,goalY));
+    Rectangle(x,y,w,h).DetectCollision(Rectangle(ox,oy,ow,oh), &col, math::vec2(goalX,goalY));
     return {col.touch, col.normal};
 }
 auto touch(float x, float y, float w, float h,  float ox, float oy, float ow, float oh)
@@ -116,13 +116,13 @@ auto touch(float x, float y, float w, float h,  float ox, float oy, float ow, fl
 std::vector<math::vec2> slide(float x, float y, float w, float h,  float ox, float oy, float ow, float oh, float goalX,float goalY)
 {
     Collision col;
-    Rectangle(x,y,w,h).DetectCollision(Rectangle(ox,oy,ow,oh), col, math::vec2(goalX,goalY));
+    Rectangle(x,y,w,h).DetectCollision(Rectangle(ox,oy,ow,oh), &col, math::vec2(goalX,goalY));
 
     CollisionResolution res;
 
     auto resp = response::Slide();
     resp.SetWorld(&sampleWorld);
-    resp.Resolve(res,col, Rectangle(x,y,w,h), math::vec2(goalX,goalY),nullptr);
+    resp.Resolve(res,&col, Rectangle(x,y,w,h), math::vec2(goalX,goalY),nullptr);
     return {col.touch, col.normal, resp.slide};
 }
 auto slide(float x, float y, float w, float h,  float ox, float oy, float ow, float oh)
@@ -133,13 +133,13 @@ auto slide(float x, float y, float w, float h,  float ox, float oy, float ow, fl
 std::vector<math::vec2> bounce(float x, float y, float w, float h,  float ox, float oy, float ow, float oh, float goalX,float goalY)
 {
     Collision col;
-    Rectangle(x,y,w,h).DetectCollision(Rectangle(ox,oy,ow,oh), col, math::vec2(goalX,goalY));
+    Rectangle(x,y,w,h).DetectCollision(Rectangle(ox,oy,ow,oh), &col, math::vec2(goalX,goalY));
 
     CollisionResolution res;
 
     auto resp = response::Bounce();
     resp.SetWorld(&sampleWorld);
-    resp.Resolve(res,col, Rectangle(x,y,w,h), math::vec2(goalX,goalY),nullptr);
+    resp.Resolve(res,&col, Rectangle(x,y,w,h), math::vec2(goalX,goalY),nullptr);
     return {col.touch, col.normal, resp.bounce};
 }
 auto bounce(float x, float y, float w, float h,  float ox, float oy, float ow, float oh)

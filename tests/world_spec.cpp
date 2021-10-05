@@ -82,7 +82,7 @@ TEST_F(BumpWorldTest, CollisionList)
         ASSERT_EQ(world.CountItems(), 2);
         ASSERT_EQ(world.CountCellItems(), 2);
 
-        std::vector<Collision> collisions;
+        Collisions collisions;
         world.Project(collisions, nullptr, Rectangle(4,6,10,10));
         ASSERT_EQ(collisions.size() ,1);
     }
@@ -92,7 +92,7 @@ TEST_F(BumpWorldTest, CollisionListTunneling)
 {
     AddItem("a", 1,0,2,1);
 
-    std::vector<Collision> collisions;
+    Collisions collisions;
     world.Project(collisions, nullptr, Rectangle(-5,0,4,1), math::vec2(5,0));
     ASSERT_EQ(collisions.size() ,1);
 }
@@ -100,7 +100,7 @@ TEST_F(BumpWorldTest, CollisionListTunneling)
 TEST_F(BumpWorldTest, CollisionTouchOnly)
 {
     AddItem("b",0,0,32,100);
-    std::vector<Collision> collisions;
+    Collisions collisions;
     world.Project(collisions, nullptr, Rectangle(32,50,20,20), math::vec2(30,50));
     ASSERT_EQ(collisions.size() ,1);
 }
@@ -110,14 +110,14 @@ TEST_F(BumpWorldTest, SortedByTi)
     AddItem("c", 50,0, 10,10);
     AddItem("d", 90,0, 10,10);
 
-    std::vector<Collision> collisions;
+    Collisions collisions;
     world.Project(collisions, nullptr, Rectangle(110,0,10,10), math::vec2(10,0));
 
     std::vector<float> tis = {0.1f, 0.3f, 0.5f};
     int i=0;
     for (auto& col: collisions)
     {
-        ASSERT_EQ(col.ti, tis[i]);
+        ASSERT_EQ(col->ti, tis[i]);
         i++;
     };
 }
@@ -128,7 +128,7 @@ TEST_F(BumpWorldTest, CollisionFilter)
 
     auto d = AddItem("d", 90,0, 10,10);
 
-    std::vector<Collision> collisions;
+    Collisions collisions;
     world.Project(collisions, nullptr, Rectangle(110,0,10,10), math::vec2(10,0), [d](Item* item, Item* other, auto response){
         return other != d;
     });
@@ -140,7 +140,7 @@ TEST_F(BumpWorldTest, Remove)
     auto a = AddItem("a", 0,0,10,10);
 
     {
-        std::vector<Collision> collisions;
+        Collisions collisions;
         world.Project(collisions, nullptr, Rectangle(5,0,1,1));
         ASSERT_EQ(collisions.size(), 1);
     }
@@ -149,7 +149,7 @@ TEST_F(BumpWorldTest, Remove)
     world.Remove(a);
 
     {
-        std::vector<Collision> collisions;
+        Collisions collisions;
         world.Project(collisions, nullptr, Rectangle(5,0,1,1));
         ASSERT_EQ(collisions.size(), 0);
     }

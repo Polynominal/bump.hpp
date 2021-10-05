@@ -15,6 +15,7 @@ namespace plugin::physics::bump
 
     typedef std::function<bool(Item*, Item*, Collision*)> Filter;
     typedef std::function<bool(Item* a)> FilterSingle;
+    typedef std::vector<std::shared_ptr<Collision>> Collisions;
 
     class CollisionResponse
     {
@@ -24,7 +25,7 @@ namespace plugin::physics::bump
         CollisionResponse(){};
         virtual void Resolve(
             CollisionResolution& resolution,
-            Collision& col,
+            Collision* col,
             const Rectangle& rect,
             math::vec2 goal,
             Filter filter
@@ -32,7 +33,7 @@ namespace plugin::physics::bump
 
         void Resolve(
             CollisionResolution& resolution,
-            Collision& col,
+            Collision* col,
             const Rectangle& rect,
             math::vec2 goal)
         {
@@ -95,7 +96,7 @@ namespace plugin::physics::bump
     class CollisionResolution
     {
     public:
-        CollisionResolution(math::vec2 pos, std::vector<Collision> cols)
+        CollisionResolution(math::vec2 pos, Collisions cols)
         {
             this->pos = pos;
             this->collisions = cols;
@@ -105,6 +106,6 @@ namespace plugin::physics::bump
             this->pos = math::vec2(0,0);
         }
         math::vec2 pos;
-        std::vector<Collision> collisions;
+        Collisions collisions;
     };
 }

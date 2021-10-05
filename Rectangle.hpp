@@ -36,9 +36,9 @@ namespace plugin::physics::bump
         math::vec2 GetNearestCorner(const math::vec2& other) const;
         Rectangle GetDifference(const Rectangle& other) const;
         bool GetSegmentIntersectionIndices(math::vec2 top, math::vec2 bottom, IntersectionIndicie& indicie) const;
-        bool DetectCollision(const Rectangle& other, Collision& collision) const
+        bool DetectCollision(const Rectangle& other, Collision* collision) const
         {return DetectCollision(other, collision, pos);}
-        bool DetectCollision(const Rectangle& other,Collision& collision, math::vec2 goal) const;
+        bool DetectCollision(const Rectangle& other,Collision* collision, math::vec2 goal) const;
 
         bool compare(const Rectangle& rhs){return (pos == rhs.pos and pos == rhs.scale);}
         inline bool operator==(const Rectangle& rhs){ return compare(rhs); }

@@ -10,7 +10,7 @@ namespace plugin::physics::bump::response
 
         void Resolve(
             CollisionResolution& resolution,
-            Collision& col,
+            Collision* col,
             const Rectangle& rect,
             math::vec2 goal,
             Filter filter
@@ -23,7 +23,7 @@ namespace plugin::physics::bump::response
 
         void Resolve(
             CollisionResolution& resolution,
-            Collision& col,
+            Collision* col,
             const Rectangle& rect,
             math::vec2 goal,
             Filter filter
@@ -38,7 +38,7 @@ namespace plugin::physics::bump::response
 
         void Resolve(
             CollisionResolution& resolution,
-            Collision& col,
+            Collision* col,
             const Rectangle& rect,
             math::vec2 goal,
             Filter filter
@@ -56,7 +56,7 @@ namespace plugin::physics::bump::response
 
         void Resolve(
             CollisionResolution& resolution,
-            Collision& col,
+            Collision* col,
             const Rectangle& rect,
             math::vec2 goal,
             Filter filter

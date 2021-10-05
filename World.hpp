@@ -53,12 +53,12 @@ namespace plugin::physics::bump
     public:
         World() : World(64){};
         World(int cellsize);
-        void Project(std::vector<Collision>& collisions, Item* item, const Rectangle& rect, math::vec2 goal, Filter filter);
-        void Project(std::vector<Collision>& collisions, Item* item, const Rectangle& rect, math::vec2 goal)
+        void Project(Collisions& collisions, Item* item, const Rectangle& rect, math::vec2 goal, Filter filter);
+        void Project(Collisions& collisions, Item* item, const Rectangle& rect, math::vec2 goal)
         {
             Project(collisions, item, rect, goal, nullptr);
         };
-        void Project(std::vector<Collision>& collisions, Item* item, const Rectangle& rect)
+        void Project(Collisions& collisions, Item* item, const Rectangle& rect)
         {
             Project(collisions, item, rect, rect.pos, nullptr);
         };

@@ -20,7 +20,7 @@ inline static bool removeIf(CONTAINER& container, LAMBDA lambda)
     return any_change;
 }
 
-void World::Project(std::vector<Collision>& colissions, Item* item,const Rectangle& rect, math::vec2 goal, Filter filter)
+void World::Project(Collisions& colissions, Item* item,const Rectangle& rect, math::vec2 goal, Filter filter)
 {
     // assertIsRect(x,y,w,h)
     std::set<Item*> visited;
@@ -46,50 +46,50 @@ void World::Project(std::vector<Collision>& colissions, Item* item,const Rectang
         if (not (visited.find(other) != visited.end()))
         {
             visited.insert(other);
-            Collision col;
+            std::shared_ptr<Collision> col = std::make_shared<Collision>();
 
             bool respond=false;
             if (filter)
             {
-                respond = filter(item,other, &col);
-                if (respond and not col.Response())
+                respond = filter(item,other, col.get());
+                if (respond and not col->Response())
                 {
-                    col.Respond<response::DefaultCollisionResponse>();
+                    col->Respond<response::DefaultCollisionResponse>();
                 }
             }
             else
             {
                 respond = true;
-                col.Respond<response::DefaultCollisionResponse>();
+                col->Respond<response::DefaultCollisionResponse>();
             }
 
             if (respond)
             {
-                col.response->world = this;
+                col->response->world = this;
 
 
-                if (rect.DetectCollision(other->rect,col,goal))
+                if (rect.DetectCollision(other->rect,col.get(),goal))
                 {
-                    col.other = other;
-                    col.item = item;
+                    col->other = other;
+                    col->item = item;
                     colissions.push_back(col);
                 }
             }
         }
     }
-    std::sort(colissions.begin(), colissions.end(), [](const Collision& a, const Collision& b){
-        if (a.ti == b.ti)
+    std::sort(colissions.begin(), colissions.end(), [](auto a, auto b){
+        if (a->ti == b->ti)
         {
-            auto ir = a.itemRect;
-            auto ar = a.otherRect;
-            auto br = b.otherRect;
+            auto ir = a->itemRect;
+            auto ar = a->otherRect;
+            auto br = b->otherRect;
 
             auto ad = ir.GetSquareDistance(ar);
             auto bd = ir.GetSquareDistance(br);
 
             return ad < bd;
         }
-        return a.ti < b.ti;
+        return a->ti < b->ti;
     });
 }
 
@@ -316,23 +316,23 @@ void World::Check(CollisionResolution& finalRes, Item* item, math::vec2 goal, Fi
 
     auto rect = item->rect;
 
-    std::vector<Collision> projectedCollisions;
+    Collisions projectedCollisions;
     Project(projectedCollisions,item, rect, goal, filter);
 
     int projected_len = projectedCollisions.size();
 
 
-    std::vector<Collision> collisions;
+    Collisions collisions;
     finalRes.pos = goal;
 
     while(projected_len > 0)
     {
         auto col = projectedCollisions[0];
         collisions.push_back(col);
-        visited.insert(col.other);
+        visited.insert(col->other);
 
         CollisionResolution resolution;
-        col.response->Resolve(resolution, col, rect, goal, visitedFilter);
+        col->response->Resolve(resolution, col.get(), rect, goal, visitedFilter);
         projectedCollisions = resolution.collisions;
         projected_len = projectedCollisions.size();
         finalRes.pos = resolution.pos;
