@@ -1,7 +1,9 @@
+[![Build](https://github.com/Polynominal/bump.hpp/actions/workflows/cmake.yml/badge.svg)](https://github.com/Polynominal/bump.hpp/actions/workflows/cmake.yml)
+
 # bump.hpp
 C++ port of https://github.com/kikito/bump.lua
 
-Background:
+Background
 ============================
 
 bump.hpp used to be a part of a bigger project, so bump itself is stored in the namespace **plugin::physics::bump** for now.
