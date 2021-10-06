@@ -40,7 +40,7 @@ void Slide::Resolve(
 {
     if (col->move.x != 0.0f or col->move.y != 0.0f)
     {
-        if (col->normal.x != 0)
+        if (col->normal.x != 0.0f)
         {
             goal.x = col->touch.x;
         }
@@ -50,14 +50,15 @@ void Slide::Resolve(
         }
     }
 
+
     Rectangle tRect = Rectangle(col->touch, rect.scale);
 
     Collisions collisions;
     world->Project(collisions, col->item, tRect, goal, filter);
-
     this->slide = goal;
     resolution.pos = goal;
     resolution.collisions = collisions;
+
 }
 
 

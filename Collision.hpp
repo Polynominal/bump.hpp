@@ -56,7 +56,7 @@ namespace plugin::physics::bump
         template<typename T>
         bool Is()
         {
-            if (reinterpret_cast<T*>(&response))
+            if (dynamic_cast<T*>(response.get()))
             {
                 return true;
             }

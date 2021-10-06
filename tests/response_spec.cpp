@@ -235,3 +235,38 @@ TEST(BOUNCE, tunnels)
     // -- perfect corner case:
     ASSERT_THAT(bounce(10,10,2,2, 0,0,8,8, 1, 1), testing::ContainerEq(vec2Array({ 8, 8, 1, 0, 15, 1})));
 }
+
+
+
+bool CompareFloatSafe(float a, float b)
+{
+    return (abs(a - b) < 1e-5);
+}
+TEST_F(BumpWorldTest, multiCollision)
+{
+    AddItem("rect a", 2,22,2,2);
+    AddItem("rect b", 0,20,2,2);
+    AddItem("rect c", 22,22,2,2);
+
+    auto player = AddItem("player", 0.584998f,20,2,2);
+
+    CollisionResolution resolution;
+    Filter filter = [](auto a, auto b, Collision* col){
+        col->Respond<plugin::physics::bump::response::Slide>();
+        return true;
+    };
+    world.Move(resolution, player, math::vec2(0.579f,20.005f), filter);
+    ASSERT_TRUE(CompareFloatSafe(resolution.pos.x, 2.0f));
+    ASSERT_TRUE(CompareFloatSafe(resolution.pos.y, 20.0f));
+    ASSERT_EQ(resolution.collisions.size(), 2);
+    auto cola = resolution.collisions[0];
+    ASSERT_TRUE(cola->Is<plugin::physics::bump::response::Slide>());
+
+    auto colb = resolution.collisions[1];
+    ASSERT_TRUE(colb->Is<plugin::physics::bump::response::Slide>());
+
+    float an = (float)resolution.pos.x;
+    float bn = (float)math::vec2(2,20).x;
+
+    // CompareRectangle(Rectangle(2,20, 2,2), player->GetRectangle());
+}

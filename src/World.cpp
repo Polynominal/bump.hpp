@@ -336,6 +336,7 @@ void World::Check(CollisionResolution& finalRes, Item* item, math::vec2 goal, Fi
         projectedCollisions = resolution.collisions;
         projected_len = projectedCollisions.size();
         finalRes.pos = resolution.pos;
+        goal = resolution.pos;
 
     }
     finalRes.collisions = collisions;
