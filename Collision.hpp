@@ -42,7 +42,7 @@ namespace plugin::physics::bump
 
         void SetWorld(World* world){this->world = world;}
     protected:
-        World* world;
+        World* world=nullptr;
 
     };
 
