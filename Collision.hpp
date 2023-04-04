@@ -82,8 +82,8 @@ namespace plugin::physics::bump
         Rectangle itemRect;
         Rectangle otherRect;
 
-        Item* item;
-        Item* other;
+        Item* item=nullptr;
+        Item* other=nullptr;
 
     protected:
         std::shared_ptr<CollisionResponse> response;
