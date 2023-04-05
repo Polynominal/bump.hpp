@@ -220,23 +220,31 @@ Item* World::Add(util::UserData data, Rectangle rect)
 
 bool World::Remove(Item* item)
 {
-
-    auto removed = removeIf(items, [item](auto& candidate){
-        return candidate->UserData.GetRaw() == item->UserData.GetRaw();
-    });
-
-    if (removed)
+    if (item == nullptr){return false;} //sanity check
+    
+    bool exists = false;
+    for(auto candidate: items)
     {
-        auto cellRect = grid.ToCellRect(item->rect);
-        for (int cy=cellRect.pos.y; cy < cellRect.pos.y + cellRect.scale.y; cy++)
+        if (candidate->UserData.GetRaw() == item->UserData.GetRaw())
         {
-            for (int cx=cellRect.pos.x; cx < cellRect.pos.x + cellRect.scale.x; cx++)
-            {
-                RemoveItemFromCell(item, cx,cy);
-            }
+            exists = true;
+            break;
         }
     }
-    return removed;
+    if (!exists){return false;}
+
+    auto cellRect = grid.ToCellRect(item->rect);
+    for (int cy=cellRect.pos.y; cy < cellRect.pos.y + cellRect.scale.y; cy++)
+    {
+        for (int cx=cellRect.pos.x; cx < cellRect.pos.x + cellRect.scale.x; cx++)
+        {
+            RemoveItemFromCell(item, cx,cy);
+        }
+    }
+    
+    return removeIf(items, [item](auto& candidate){
+        return candidate->UserData.GetRaw() == item->UserData.GetRaw();
+    });
 }
 
 void World::Update(Item* item, const Rectangle& rectOther)
