@@ -223,7 +223,7 @@ bool World::Remove(Item* item)
     if (item == nullptr){return false;} //sanity check
     
     bool exists = false;
-    for(auto% candidate: items)
+    for(auto& candidate: items)
     {
         if (candidate->UserData.GetRaw() == item->UserData.GetRaw())
         {
