@@ -231,7 +231,7 @@ bool World::Remove(void* itemPtr)
             break;
         }
     }
-    if (candidate==nullptr){return false;}
+    if (worldItem==nullptr){return false;}
 
     auto cellRect = grid.ToCellRect(worldItem->rect);
     for (int cy=cellRect.pos.y; cy < cellRect.pos.y + cellRect.scale.y; cy++)
