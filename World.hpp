@@ -114,6 +114,7 @@ namespace plugin::physics::bump
         Item* Add(util::UserData data, Rectangle rect);
 
         bool Remove(Item* item);
+        bool Remove(void* itemPtr);
 
         void Update(Item* item, const Rectangle& rect);
 
