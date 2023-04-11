@@ -218,33 +218,38 @@ Item* World::Add(util::UserData data, Rectangle rect)
     return item.get();
 }
 
-bool World::Remove(Item* item)
+bool World::Remove(void* itemPtr)
 {
-    if (item == nullptr){return false;} //sanity check
+    if (itemPtr == nullptr){return false;} //sanity check
     
-    bool exists = false;
+    Item* worldItem=nullptr;
     for(auto& candidate: items)
     {
-        if (candidate->UserData.GetRaw() == item->UserData.GetRaw())
+        if (candidate->UserData.GetRaw() == itemPtr)
         {
-            exists = true;
+            worldItem = candidate;
             break;
         }
     }
-    if (!exists){return false;}
+    if (candidate==nullptr){return false;}
 
-    auto cellRect = grid.ToCellRect(item->rect);
+    auto cellRect = grid.ToCellRect(worldItem->rect);
     for (int cy=cellRect.pos.y; cy < cellRect.pos.y + cellRect.scale.y; cy++)
     {
         for (int cx=cellRect.pos.x; cx < cellRect.pos.x + cellRect.scale.x; cx++)
         {
-            RemoveItemFromCell(item, cx,cy);
+            RemoveItemFromCell(worldItem, cx,cy);
         }
     }
     
-    return removeIf(items, [item](auto& candidate){
-        return candidate->UserData.GetRaw() == item->UserData.GetRaw();
+    return removeIf(items, [itemPtr](auto& candidate){
+        return candidate->UserData.GetRaw() == itemPtr;
     });
+}
+bool World::Remove(Item* item)
+{
+    if (item == nullptr){return false;} //sanity check
+    return Remove(item->UserData.GetRaw());
 }
 
 void World::Update(Item* item, const Rectangle& rectOther)
