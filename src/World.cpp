@@ -227,7 +227,7 @@ bool World::Remove(void* itemPtr)
     {
         if (candidate->UserData.GetRaw() == itemPtr)
         {
-            worldItem = candidate;
+            worldItem = candidate.get();
             break;
         }
     }
