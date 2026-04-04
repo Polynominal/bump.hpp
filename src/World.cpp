@@ -194,7 +194,7 @@ void World::QuerySegmentWithCoords(std::vector<ItemInfo>& items, math::vec2 top,
 
         info.weight = 0;
         info.top = top + delta * ti1;
-        info.bottom = bottom + delta * ti2;
+        info.bottom = top + delta * ti2;
     }
 }
 
@@ -291,7 +291,7 @@ void World::Update(Item* item, const Rectangle& rectOther)
 
                 for (int cx = cellRectOther.pos.x; cx <= cr2; cx++)
                 {
-                    if (cyOut or cx < cellRectOther.pos.x or cx > cr2)
+                    if (cyOut or cx < cellRect.pos.x or cx > cr1)
                     {
                         AddItemToCell(item, cx,cy);
                     }
@@ -321,16 +321,13 @@ void World::Check(CollisionResolution& finalRes, Item* item, math::vec2 goal, Fi
         {
             return false;
         }
-        else
-        {
-            return filter(item, other, response);
-        }
+        return !filter || filter(item, other, response);
     };
 
     auto rect = item->rect;
 
     Collisions projectedCollisions;
-    Project(projectedCollisions,item, rect, goal, filter);
+    Project(projectedCollisions,item, rect, goal, visitedFilter);
 
     int projected_len = projectedCollisions.size();
 
@@ -460,7 +457,7 @@ void World::GetCellsTouchedBySegment(std::map<int, Cell*>& cells, math::vec2 top
         if (row == rows.end()){return;}
 
         auto rRow = &(*row).second;
-        auto cell = rRow->find(y);
+        auto cell = rRow->find(x);
 
         if (cell == rRow->end() or (visited.find(&(*cell).second) != visited.end()))
         {
