@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "BumpWorldTest.hpp"
+#include "../CollisionResponses.hpp"
 
 
 
@@ -343,4 +344,139 @@ TEST_F(BumpWorldTest, MoveNoCollision)
 
     CompareVec2(resolution.pos, math::vec2(1,1));
     ASSERT_EQ(resolution.collisions.size(), 0);
+}
+
+// ============================================================
+// Bug 6 fix: GetCellsTouchedBySegment used `y` as column key
+// instead of `x`, so QuerySegment never found items in cells
+// that were not in the same row+column position by coincidence.
+// These tests use items spread across clearly distinct cells
+// and verify the segment actually finds them.
+// ============================================================
+
+TEST_F(BumpWorldTest, QuerySegmentAcrossCells)
+{
+    // Items placed in different cells (cell size = 64)
+    // a is in cell (1,1), b is in cell (3,1), c is in cell (5,1)
+    // A horizontal segment at y=5 crossing all of them should find all three.
+    auto a = AddItem("a",  10, 0, 10, 10);  // cell (1,1)
+    auto b = AddItem("b", 150, 0, 10, 10);  // cell (3,1)
+    auto c = AddItem("c", 300, 0, 10, 10);  // cell (5,1)
+
+    // Segment from left of a to right of c
+    QuerySegmentTest(0, 5, 320, 5, {a, b, c});
+}
+
+TEST_F(BumpWorldTest, QuerySegmentVertical)
+{
+    // Items in different row cells: cell (1,1), (1,3), (1,5)
+    auto a = AddItem("a", 0,  10, 10, 10);  // cell (1,1)
+    auto b = AddItem("b", 0, 150, 10, 10);  // cell (1,3)
+    auto c = AddItem("c", 0, 300, 10, 10);  // cell (1,5)
+
+    // Vertical segment crossing all
+    QuerySegmentTest(5, 0, 5, 320, {a, b, c});
+}
+
+TEST_F(BumpWorldTest, QuerySegmentSingleDistantCell)
+{
+    // Item in a far cell — with the bug, looking up column x using key y
+    // would always miss items not on the diagonal.
+    auto a = AddItem("a", 200, 10, 10, 10);  // cell (4,1) — x != y
+
+    QuerySegmentTest(190, 15, 220, 15, {a});
+}
+
+// ============================================================
+// Bug 4 fix: World::Update re-add loop checked new rect bounds
+// instead of old rect bounds, so items moving into overlapping
+// cell regions were never added to the new cells.
+// After Update, the item must still be detectable via Project.
+// ============================================================
+
+TEST_F(BumpWorldTest, UpdateItemStillCollidable)
+{
+    // Bug 2 only triggers when moving within the SAME ROW to a different column.
+    // The buggy re-add condition (cx < new_cl or cx > new_cr) is always false
+    // for cx values inside the new rect, so when cyOut is also false (same row),
+    // nothing gets added. Moving to a different row bypasses the bug (cyOut=true).
+    // old: (0,0,10,10) -> col=1, row=1. new: (200,0,10,10) -> col=4, row=1.
+    // cy=1: cyOut=false. cx=4: buggy cx<4 or cx>4 = false -> NOT added. Bug triggered.
+    auto a = AddItem("a", 0, 0, 10, 10);   // col=1, row=1
+
+    Rectangle newRect(200, 0, 10, 10);     // col=4, row=1 — same row!
+    world.Update(a, newRect);
+
+    // Probe at new position — item should be found only if col=4 was correctly added
+    Collisions collisions;
+    world.Project(collisions, nullptr, Rectangle(205, 5, 1, 1));
+    ASSERT_EQ(collisions.size(), 1);
+}
+
+TEST_F(BumpWorldTest, UpdateItemNotAtOldPosition)
+{
+    // Same-row move (y=0 unchanged): old col=1, new col=4.
+    // With the bug, item is removed from col=1 correctly but never added to col=4.
+    // So old position returns 0 (correct either way) but new position also returns 0 (wrong).
+    auto a = AddItem("a", 0, 0, 10, 10);   // col=1, row=1
+
+    Rectangle newRect(200, 0, 10, 10);     // col=4, row=1 — same row!
+    world.Update(a, newRect);
+
+    // Old position: item should be gone
+    Collisions oldPos;
+    world.Project(oldPos, nullptr, Rectangle(5, 0, 1, 1));
+    ASSERT_EQ(oldPos.size(), 0);
+
+    // New position: item should be found — fails with bug because col=4 was never added
+    Collisions newPos;
+    world.Project(newPos, nullptr, Rectangle(205, 0, 1, 1));
+    ASSERT_EQ(newPos.size(), 1);
+}
+
+TEST_F(BumpWorldTest, UpdateCellCountCorrect)
+{
+    // Same-row move: old col=1 row=1, new col=4 row=1.
+    // With the bug, col=4 is never added (cyOut=false, cx condition always false).
+    // So after Update, CountCells drops to 0 instead of staying at 1.
+    auto a = AddItem("a", 0, 0, 10, 10);   // col=1, row=1
+    ASSERT_EQ(world.CountCells(), 1);
+
+    Rectangle newRect(200, 0, 10, 10);     // col=4, row=1 — same row!
+    world.Update(a, newRect);
+
+    // Old cell removed, new cell added — should still be exactly 1
+    ASSERT_EQ(world.CountCells(), 1);
+}
+
+// ============================================================
+// Bug 2 fix: Grid::Traverse called f(center) instead of
+// f(cBottom) for the final cell, so the destination cell
+// was sometimes missed when the traversal loop exited early.
+// QuerySegment hitting exactly the last cell exercises this.
+// ============================================================
+
+TEST_F(BumpWorldTest, TraverseFinalCellReached)
+{
+    // Item placed so that the segment's endpoint lands exactly
+    // in its cell and the loop exits before visiting it.
+    // The item sits in a cell that is the last cell of the segment.
+    auto a = AddItem("a", 250, 0, 10, 10);  // cell (4,1)
+
+    // Segment that ends just inside a's cell
+    QuerySegmentTest(0, 5, 256, 5, {a});
+}
+
+TEST_F(BumpWorldTest, TraverseFinalCellDiagonal)
+{
+    // Segment ends exactly 1 step away from the last visited cell,
+    // so the while-loop exits with center != cBottom and the final-cell
+    // branch must call f(cBottom) not f(center). With the bug, f(center)
+    // was called — visiting the wrong cell and missing the item.
+    // Item is in cell (4,1); segment travels horizontally from cell (1,1)
+    // to cell (4,1), exiting the loop one cell early.
+    auto a = AddItem("a", 250, 0, 10, 10);  // cell (4,1) x=250..260
+
+    // Segment ends at x=255, well inside cell (4,1) — exactly the final-cell case
+    QuerySegmentTest(0, 5, 255, 5, {a});
 }

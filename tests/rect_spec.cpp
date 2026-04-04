@@ -104,3 +104,27 @@ TEST(RECTANGLE, CornerCase)
         ASSERT_FALSE(Rectangle(0,16,16,16).DetectCollision(Rectangle(16,0,16,16),  col.get(), math::vec2(-1,15)));
     }
 }
+
+// ============================================================
+// Bug 1 fix: Rectangle::compare compared pos==pos and pos==scale
+// instead of pos==rhs.pos and scale==rhs.scale.
+// ============================================================
+
+TEST(RECTANGLE, CompareIdentical)
+{
+    // Two identical rectangles must compare equal
+    ASSERT_TRUE(Rectangle(0, 0, 1, 1).compare(Rectangle(0, 0, 1, 1)));
+    ASSERT_TRUE(Rectangle(5, 3, 10, 20).compare(Rectangle(5, 3, 10, 20)));
+}
+
+TEST(RECTANGLE, OperatorEqAndNeq)
+{
+    Rectangle r1(1, 2, 3, 4);
+    Rectangle r2(1, 2, 3, 4);
+    Rectangle r3(1, 2, 3, 9);
+
+    ASSERT_TRUE(r1 == r2);
+    ASSERT_FALSE(r1 != r2);
+    ASSERT_FALSE(r1 == r3);
+    ASSERT_TRUE(r1 != r3);
+}
